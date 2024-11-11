@@ -30,9 +30,9 @@ conda env create -f requirements.yml
 pyhton train.py --model u2net --dataset crack500 --epochs 20
 ```
 
-![开始训练](.\docs\training.png)
+![开始训练](./docs/training.png)
 
-![训练进度](.\docs\processing.png)
+![训练进度](./docs/processing.png)
 
 
 
