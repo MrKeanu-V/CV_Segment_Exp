@@ -1,0 +1,18 @@
+# 此处为本项目所需的依赖库列表
+# 使用pip install -r requirements.txt即可自动安装
+
+# 基本库
+# python>=3.9.2
+# 深度学习框架 建议手动安装
+# pytorch==2.1.1
+# torchvision==0.16.1
+# 图像处理
+pillow>=9.5.0
+opencv-python>=4.6.0
+# 数据处理
+numpy>=2.0.2
+pandas
+# 进度条
+tqdm>=4.65.0
+tensorboardx>=2.6.2.2
+matplotlib>=3.9.2
