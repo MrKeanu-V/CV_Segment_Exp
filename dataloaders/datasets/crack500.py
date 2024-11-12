@@ -39,6 +39,10 @@ class Crack500(Dataset):
         self.masks = []
         self.threshold = 0.3
         self.transform = transform
+        self.default_transform = transforms.Compose([
+            transforms.Resize((360, 360)),
+            transforms.ToTensor(),
+        ])
 
         images = glob.glob(os.path.join(self._base_dir, '*' + '.jpg'))
         for i, image in enumerate(images):
@@ -69,21 +73,13 @@ class Crack500(Dataset):
             _img = self.transform(_img)
             _mask = self.transform(_mask)
         else:
-            _img = self.default_transform()(_img)
-            _mask = self.default_transform()(_mask)
+            _img = self.default_transform(_img)
+            _mask = self.default_transform(_mask)
 
         return {'image': _img, 'label': _mask.squeeze()}
 
     def __str__(self):
         return 'Crack500 Dataset (cur split={})'.format(self.type)
-
-    @staticmethod
-    def default_transform():
-        transform = transforms.Compose([
-            transforms.Resize((360, 360)),
-            transforms.ToTensor(),
-        ])
-        return transform
 
     def encode_segmap(self, mask):
         return np.where(mask > self.threshold, 1, 0)
@@ -118,6 +114,7 @@ if __name__ == '__main__':
 
 
     from dataloaders.utils import decode_segmap
+
     args = get_args()
     dataset = Crack500(args=args)
     dataloader = DataLoader(dataset, batch_size=4, shuffle=True, num_workers=1)
@@ -135,4 +132,3 @@ if __name__ == '__main__':
                     ax.imshow(lbl, alpha=0.5)
                     # ax.axis('off')
                 plt.show()
-

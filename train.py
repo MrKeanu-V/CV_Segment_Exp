@@ -37,7 +37,7 @@ class Trainer(object):
 
         # Define network
         if self.args.model == 'unet':
-            model = U2Net(n_channels=3, n_classes=self.nclass)
+            model = UNet(n_channels=3, n_classes=self.nclass)
         elif self.args.model == 'u2net':
             model = U2Net(n_channels=3, n_classes=self.nclass)
         else:
@@ -86,7 +86,7 @@ class Trainer(object):
             checkpoint = torch.load(args.resume)
             args.start_epoch = checkpoint['epoch']
             if args.cuda:
-                self.model.module.load_state_dict(checkpoint['state_dict'])
+                self.model.module.load_state_dict(checkpoint['state_dict'])  # for DataParallel
             else:
                 self.model.load_state_dict(checkpoint['state_dict'])
             if not args.ft:
