@@ -43,13 +43,16 @@ class Trainer(object):
         else:
             raise NotImplementedError
 
-        # Define Optimizer from Utils. SGD End to End
-        optimizer = torch.optim.SGD(params=model.parameters(), lr=args.lr, momentum=args.momentum,
-                                    weight_decay=args.weight_decay,
-                                    nesterov=args.nesterov)
-        # Use Adam Optimizer Instead
-        # optimizer = torch.optim.Adam(model.parameters(), betas=(args.momentum, 0.999),
-        #                              weight_decay=args.weight_decay)
+        # Define Optimizer
+        if args.optimizer == 'sgd':
+            optimizer = torch.optim.SGD(params=model.parameters(), lr=args.lr, momentum=args.momentum,
+                                        weight_decay=args.weight_decay,
+                                        nesterov=args.nesterov)
+        elif args.optimizer == 'adam':
+            optimizer = torch.optim.AdamW(params=model.parameters(), lr=args.lr, betas=(args.momentum, 0.999),
+                                          weight_decay=args.weight_decay)
+        else:
+            raise NotImplementedError
 
         # Define Criterion
         # whether to use class balanced weights
@@ -101,7 +104,8 @@ class Trainer(object):
     def training(self, epoch):
         train_loss = 0.0
         self.model.train()
-        tbar = tqdm(self.train_loader, desc=f'Epoch: {epoch + 1}/{self.args.epochs} training', total=len(self.train_loader)*self.args.batch_size, unit='images', colour='green', ncols=150)
+        tbar = tqdm(self.train_loader, desc=f'Epoch: {epoch + 1}/{self.args.epochs} training',
+                    total=len(self.train_loader) * self.args.batch_size, unit='images', colour='green', ncols=150)
         num_img_tr = len(self.train_loader)
         for i, sample in enumerate(tbar):
             image, target = sample['image'], sample['label'],
@@ -146,7 +150,8 @@ class Trainer(object):
     def validation(self, epoch):
         self.model.eval()
         self.evaluator.reset()
-        tbar = tqdm(self.val_loader, desc=f'Epoch: {epoch + 1}/{self.args.epochs} validating', total=len(self.val_loader)*self.args.batch_size, unit='images', colour='green', ncols=150)
+        tbar = tqdm(self.val_loader, desc=f'Epoch: {epoch + 1}/{self.args.epochs} validating',
+                    total=len(self.val_loader) * self.args.batch_size, unit='images', colour='green', ncols=150)
         test_loss = 0.0
         for i, sample in enumerate(tbar):
             image, target = sample['image'], sample['label'],
@@ -234,6 +239,7 @@ def get_args():
                         help='whether to use balanced weights (default: False)')
 
     # optimizer params
+    parser.add_argument('--optimizer', type=str, default=None, choices=['Adam', 'SGD'], help='which optimizer to use (default: Adam)')
     parser.add_argument('--lr', type=float, default=None, metavar='LR',
                         help='learning rate (default: auto)')
     parser.add_argument('--lr-scheduler', type=str, default='poly',
@@ -241,8 +247,8 @@ def get_args():
                         help='lr scheduler mode: (default: poly)')
     parser.add_argument('--momentum', type=float, default=0.9,
                         metavar='M', help='momentum (default: 0.9)')
-    parser.add_argument('--weight-decay', type=float, default=1e-4,
-                        metavar='M', help='w-decay (default: 1e-4)')
+    parser.add_argument('--weight-decay', type=float, default=None,
+                        metavar='M', help='w-decay (default: optimizer`s default value)')
     parser.add_argument('--nesterov', action='store_true', default=False,
                         help='whether use nesterov (default: False)')
 
@@ -314,13 +320,31 @@ def main():
     if args.test_batch_size is None:
         args.test_batch_size = args.batch_size
 
+    # set optimizer type
+    if args.optimizer is None:
+        args.optimizer = 'Adam'
+    args.optimizer = args.optimizer.lower()
+
     # default setting for lr
     if args.lr is None:
-        lrs = {
-            'crack500': 0.01,
-            'pascal': 0.007,
-        }
+        if args.optimizer == 'adam':
+            lrs = {
+                'crack500': 0.001,
+                'pascal': 0.0007,
+            }
+        elif args.optimizer == 'SGD':
+            lrs = {
+                'crack500': 0.01,
+                'pascal': 0.007,
+            }
         args.lr = lrs[args.dataset] / (4 * len(args.gpu_ids)) * args.batch_size
+
+    # set weight_decay
+    if args.weight_decay is None:
+        if args.optimizer == 'adam':
+            args.weight_decay = 1e-2
+        elif args.optimizer == 'SGD':
+            args.weight_decay = 1e-4
 
     # set Checkpoint Name
     if args.checkname is None:
