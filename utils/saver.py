@@ -71,13 +71,16 @@ class Saver(object):
         """
         logfile = os.path.join(self.experiment_dir, 'parameters.txt')
         log_file = open(logfile, 'w')
-        p = OrderedDict()  # 有序字典为了后续输出
+        p = OrderedDict()
+        p['model'] = self.args.model
         p['datset'] = self.args.dataset
         if hasattr(self.args, 'backbone'):
-            p['backbone'] = self.args.backbone  # only in model with backbone
+            p['backbone'] = self.args.backbone
         p['out_stride'] = self.args.out_stride
+        p['optimizer'] = self.args.optimizer
         p['lr'] = self.args.lr
         p['lr_scheduler'] = self.args.lr_scheduler
+        p['weight_decay'] = self.args.weight_decay
         p['loss_type'] = self.args.loss_type
         p['epoch'] = self.args.epochs
         p['base_size'] = self.args.base_size

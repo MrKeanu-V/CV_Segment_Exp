@@ -52,11 +52,17 @@ if __name__ == '__main__':
     # print(os.path.exists(db_dir))
     from tqdm import tqdm
     from time import sleep
-    tbar = tqdm(range(100), bar_format='{l_bar}{n_fmt}/{total_fmt} [TimeUsed:{elapsed} TimeRemaining:{remaining}, Speed:{rate}/{postfix}, loss:{loss:.3f}]',
-                total=100 * 4, unit='images', colour='blue', ncols=60)
-    for i in tbar:
-        sleep(0.3)
-        tbar.set_description('Epoch %d' % i)
-        tbar.set_postfix(rate=4*tbar.rate, loss=i)
-        tbar.update(4)
-        tbar.refresh()
+    # tbar = tqdm(range(100), bar_format='{l_bar}{n_fmt}/{total_fmt} [TimeUsed:{elapsed} TimeRemaining:{remaining}, Speed:{rate}/{postfix}]',
+    #             total=100 * 4, unit='images', colour='blue', ncols=100)
+
+    for i in range(20):
+        tbar = tqdm(range(50),
+                    bar_format='{desc}:{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [Time:{elapsed}<{remaining}, Speed:{rate_fmt}{postfix}]', desc='Epoch: {}/{}'.format(1, 100), unit='batches')
+        for i in tbar:
+            sleep(0.3)
+            # tbar.set_description('Epoch: {}/{}'.format(i+1, 100))
+            # tbar.rate = 4 * tbar.n / (tbar.total - tbar.n)
+            tbar.set_description_str('Epoch: {}/{}'.format(i + 1, 100))
+            tbar.set_postfix({'loss:': f'{i / 1000:.2f}'})
+    # tbar.n=tbar.total
+    # tbar.refresh()

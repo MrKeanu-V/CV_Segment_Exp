@@ -89,7 +89,7 @@ class Trainer(object):
             checkpoint = torch.load(args.resume)
             args.start_epoch = checkpoint['epoch']
             if args.cuda:
-                self.model.module.load_state_dict(checkpoint['state_dict'])  # for DataParallel
+                self.model.load_state_dict(checkpoint['state_dict'])  # for DataParallel self.model.module.load_state_dict(checkpoint['state_dict'])
             else:
                 self.model.load_state_dict(checkpoint['state_dict'])
             if not args.ft:
@@ -104,8 +104,7 @@ class Trainer(object):
     def training(self, epoch):
         train_loss = 0.0
         self.model.train()
-        tbar = tqdm(self.train_loader, desc=f'Epoch: {epoch + 1}/{self.args.epochs} training',
-                    total=len(self.train_loader) * self.args.batch_size, unit='images', colour='green', ncols=150)
+        tbar = tqdm(self.train_loader, bar_format='{desc}:{percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [Time:{elapsed}<{remaining}, Speed:{rate_fmt}{postfix}]', unit='batch')
         num_img_tr = len(self.train_loader)
         for i, sample in enumerate(tbar):
             image, target = sample['image'], sample['label'],
@@ -121,18 +120,14 @@ class Trainer(object):
             self.optimizer.step()
             train_loss += loss.item()
             self.writer.add_scalar('train/total_loss_iter', loss.item(), i + num_img_tr * epoch)
-            tbar.set_description('Epoch: {}/{} training'.format(epoch + 1, self.args.epochs))
-            tbar.set_postfix_str('loss: %.3f' % (train_loss / (i + 1)))
-            tbar.update(self.args.batch_size)
+            tbar.set_description_str('Epoch: {}/{} training'.format(epoch + 1, self.args.epochs))
+            tbar.set_postfix({'loss': f'{train_loss / (i + 1):.2f}'})
 
             # Show 10 * 3 inference results each epoch
             # if i % (num_img_tr // 10) == 0:
             #     global_step = i + num_img_tr * epoch
             #     self.summary.visualize_image(self.writer, self.args.dataset, image, target, output, global_step)
 
-        # Refresh the tbar
-        tbar.n = tbar.total
-        tbar.refresh()
         self.writer.add_scalar('train/total_loss_epoch', train_loss, epoch)
         print('[Epoch: %d, numImages: %5d]' % (epoch, i * self.args.batch_size + image.data.shape[0]))
         print('Loss: %.3f' % train_loss)

@@ -53,7 +53,6 @@ class TensorboardSummary(object):
 
 if __name__=='__main__':
     from train import  get_args
-    from models.DSCNet import DSCNet
     from dataloaders.datasets.crack500 import Crack500
     from torch.utils.data import DataLoader
     from utils.summaries import TensorboardSummary
